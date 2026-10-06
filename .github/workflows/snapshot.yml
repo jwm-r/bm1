@@ -38,6 +38,14 @@ jobs:
         run: node scripts/download-cache.mjs
       - name: Collect BM1 and render nearby minimap regions
         run: npm run collect
+      - name: Collect configured Discord events and loot
+        continue-on-error: true
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+          DISCORD_LOOT_CHANNEL_ID: ${{ vars.DISCORD_LOOT_CHANNEL_ID }}
+          DISCORD_LOOT_AUTHOR_IDS: ${{ vars.DISCORD_LOOT_AUTHOR_IDS }}
+        run: node src/discord.mjs
       - name: Publish last successful snapshot
         run: |
           git config user.name 'github-actions[bot]'

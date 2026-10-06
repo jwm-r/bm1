@@ -77,3 +77,18 @@ No API token is stored in this repository. The workflow uses its scoped
 timeout. First push triggers collection; **Actions → BM1 party snapshot → Run
 workflow** also starts an update. Source commits stay on `main`; snapshots and
 reusable tiles stay on `data`. Generated cache files are held in Actions cache.
+
+## Discord bot setup
+
+The optional collector uses Discord's REST API on each Actions run; it does not need an always-on bot process. It stays disabled until configured. Discord failures preserve the previous `discord.json` and do not fail the BM1 publication.
+
+1. In the [Discord Developer Portal](https://discord.com/developers/applications), create an application named **BlueMoon Inn Feed**, open **Bot**, and generate its bot token. Enable **Message Content Intent** if collecting loot posts.
+2. Use **OAuth2 → URL Generator** with the `bot` scope and only **View Channels** and **Read Message History** permissions. Invite it to your clan server. Grant access only to channels intended for the public website; Administrator and Send Messages are unnecessary.
+3. Save the token as the repository Actions secret [`DISCORD_BOT_TOKEN`](https://github.com/jwm-r/bm1/settings/secrets/actions). Never commit it or paste it into chat.
+4. Enable Discord Developer Mode and copy your server ID. Add an Actions repository variable `DISCORD_GUILD_ID` in [Variables](https://github.com/jwm-r/bm1/settings/variables/actions).
+5. For loot, add `DISCORD_LOOT_CHANNEL_ID` and comma-separated `DISCORD_LOOT_AUTHOR_IDS` containing the bot/webhook author IDs whose drops should appear. Only those automated posts are included; ordinary member conversation is excluded. Leave these unset for events only.
+6. Run **BM1 party snapshot → Run workflow**. Check the Discord step. Its output is `data/discord.json`, alongside `latest.json`.
+
+Events include scheduled/active event names, descriptions, times, and Discord links. Loot currently includes the latest 100 channel messages filtered to the selected automated authors, retaining text and embed fields. This is a recent feed, not a permanent or complete loot ledger; edits and deletions are reflected on the next successful fetch. Item/quantity parsing depends on the posting bot's format. Images, attachments, member profiles, and event attendee lists are omitted. The repository and feed are public. The site's Discord display still needs wiring once the server and loot format are selected.
+
+API references: [scheduled events](https://discord.com/developers/docs/resources/guild-scheduled-event#list-scheduled-events-for-guild), [channel messages and content intent](https://discord.com/developers/docs/resources/message#get-channel-messages).

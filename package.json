@@ -1,0 +1,30 @@
+{
+  "name": "bm1-party-feed",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scheduled BM1 RuneLite party snapshots for bluemooninn.cc",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "collect": "node src/collect.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build:renderer": "node scripts/build-renderer.mjs"
+  },
+  "dependencies": {
+    "@foxglove/wasm-bz2": "^0.3.0",
+    "bzip2": "^0.1.1",
+    "denque": "^2.1.0",
+    "fast-memoize": "^2.5.2",
+    "gl-matrix": "^3.4.4",
+    "java-random": "^0.4.0",
+    "js-xxhash": "^5.0.1",
+    "pako": "^3.0.2",
+    "sharp": "^0.35.5",
+    "xxhash-wasm": "^1.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+cache/
+feed/
+*.tmp
+.DS_Store

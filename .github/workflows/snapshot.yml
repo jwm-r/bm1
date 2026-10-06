@@ -1,0 +1,45 @@
+name: BM1 party snapshot
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/**', 'vendor/**', 'scripts/**', 'package*.json', '.github/workflows/snapshot.yml']
+permissions:
+  contents: write
+concurrency:
+  group: bm1-party-snapshot
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - uses: actions/cache@v4
+        with:
+          path: cache
+          key: osrs-world-cache-235-2025-11-05-v1
+      - name: Restore previously generated tiles
+        run: |
+          mkdir -p feed
+          if git ls-remote --exit-code origin refs/heads/data > /dev/null; then
+            git fetch origin data:refs/remotes/origin/data
+            git archive refs/remotes/origin/data | tar -x -C feed
+          fi
+      - name: Prepare OSRS map cache
+        run: node scripts/download-cache.mjs
+      - name: Collect BM1 and render nearby minimap regions
+        run: npm run collect
+      - name: Publish last successful snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node scripts/publish-feed.mjs

@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+const script=path.resolve('scripts/publish-feed.mjs');
+test('publisher creates isolated data branch and advances it without changing main',()=>{
+ const root=mkdtempSync(path.join(os.tmpdir(),'bm1-publish-test-'));
+ const bare=path.join(root,'remote.git'),repo=path.join(root,'repo');mkdirSync(repo);
+ const run=(args,cwd=repo)=>execFileSync('git',args,{cwd,encoding:'utf8',stdio:['pipe','pipe','pipe']}).trim();
+ run(['init','--bare',bare],root);run(['init','-b','main']);run(['config','user.email','fixture@example.invalid']);run(['config','user.name','Test fixture']);run(['remote','add','origin',bare]);
+ writeFileSync(path.join(repo,'README.md'),'source only\n');run(['add','.']);run(['commit','-m','Source']);run(['push','-u','origin','main']);
+ const head=run(['rev-parse','HEAD']);mkdirSync(path.join(repo,'feed'));
+ writeFileSync(path.join(repo,'feed','latest.json'),JSON.stringify({schemaVersion:1,completedAt:'2026-10-05T00:00:00Z',players:[]}));
+ execFileSync(process.execPath,[script],{cwd:repo,stdio:'pipe'});
+ run(['fetch','origin','data:refs/remotes/origin/data']);
+ const first=run(['rev-parse','origin/data']);assert.equal(run(['ls-tree','--name-only','origin/data']),'latest.json');assert.equal(run(['rev-parse','HEAD']),head);
+ writeFileSync(path.join(repo,'feed','latest.json'),JSON.stringify({schemaVersion:1,completedAt:'2026-10-05T00:05:00Z',players:[]}));
+ execFileSync(process.execPath,[script],{cwd:repo,stdio:'pipe'});run(['fetch','origin','data:refs/remotes/origin/data']);
+ assert.equal(run(['rev-parse','origin/data^']),first);assert.equal(run(['rev-parse','HEAD']),head);
+});
